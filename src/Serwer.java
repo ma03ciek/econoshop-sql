@@ -13,7 +13,7 @@ public class Serwer {
 
     public static void main(String[] args) throws IOException {
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));   // Render ustawia PORT
-        HttpServer srv = HttpServer.create(new InetSocketAddress(___, port), 0);       // TODO 4: adres, na ktorym Render nas uslyszy
+        HttpServer srv = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);       // TODO 4: adres, na ktorym Render nas uslyszy
         srv.createContext("/", Serwer::raport);
         srv.createContext("/klient", Serwer::klient);
         srv.start();
@@ -38,7 +38,7 @@ public class Serwer {
         String sql = "SELECT nr, data, typ, kwota, status FROM transakcje WHERE klient = ? ORDER BY nr";
         try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + BAZA);
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, ___);                                         // TODO 5: wartosc parametru z adresu strony
+            ps.setString(1, nazwa);                                         // TODO 5: wartosc parametru z adresu strony
             StringBuilder t = new StringBuilder("<h1>Klient " + esc(nazwa) + "</h1><table><tr><th>nr</th><th>data</th><th>typ</th><th>kwota</th><th>status</th></tr>");
             int n = 0;
             try (ResultSet rs = ps.executeQuery()) {

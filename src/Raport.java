@@ -9,7 +9,7 @@ public class Raport {
         SELECT klient,
                ROUND(SUM(CASE WHEN typ = 'F' THEN kwota ELSE -kwota END), 2) AS saldo
         FROM transakcje
-        WHERE status = ___
+        WHERE status = ?
         GROUP BY klient
         ORDER BY saldo DESC""";
 
@@ -18,6 +18,7 @@ public class Raport {
         try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + plikBazy);
              PreparedStatement ps = con.prepareStatement(SQL)) {
             // TODO 3: zamien ___ w zapytaniu na znak zapytania i ustaw tu jego wartosc (ps.setString)
+            ps.setString(1, "przyjeta");
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) wynik.add(new Wiersz(rs.getString("klient"), rs.getDouble("saldo")));
             }

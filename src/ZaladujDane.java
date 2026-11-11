@@ -46,8 +46,8 @@ public class ZaladujDane {
                         KontoKlienta k = konta.get(klient);
                         String status;
                         if (k == null) status = "nieznany";
-                        else if (typ.equals("F")) status = ___;   // TODO 1: decyzja KontoKlienta dla faktury -> "przyjeta" albo "odmowa"
-                        else status = ___;                          // TODO 1: to samo dla wplaty
+                        else if (typ.equals("F")) status = k.wystawFakture(kwota) ? "przyjeta" : "odmowa";   // TODO 1: decyzja KontoKlienta dla faktury -> "przyjeta" albo "odmowa"
+                        else status = k.zaplac(kwota) ? "przyjeta" : "odmowa";                          // TODO 1: to samo dla wplaty
                         licz[status.equals("przyjeta") ? 0 : status.equals("odmowa") ? 1 : 2]++;
 
                         ps.setInt(1, Integer.parseInt(p[0]));
@@ -55,7 +55,7 @@ public class ZaladujDane {
                         ps.setString(3, klient);
                         ps.setString(4, typ);
                         ps.setDouble(5, kwota);
-                        ps.setString(6, ___);                     // TODO 2: szosty znak zapytania w INSERT
+                        ps.setString(6, status);                     // TODO 2: szosty znak zapytania w INSERT
                         ps.executeUpdate();
                     }
                 }

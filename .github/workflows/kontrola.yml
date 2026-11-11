@@ -1,0 +1,17 @@
+name: kontrola
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Kompilacja
+        run: javac -cp "lib/*" -d out src/*.java
+      - name: Budowa bazy z CSV
+        run: java -cp "lib/*:out" ZaladujDane z5.db dane/klienci.csv dane/transakcje_2026-10.csv
+      - name: Kontrola wyniku (498850.50, HHI 2646)
+        run: java -cp "lib/*:out" Kontrola z5.db

@@ -16,6 +16,7 @@ public class Serwer {
         HttpServer srv = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);       // TODO 4: adres, na ktorym Render nas uslyszy
         srv.createContext("/", Serwer::raport);
         srv.createContext("/klient", Serwer::klient);
+        srv.createContext("/odmowy", Serwer::odmowy);
         srv.start();
         System.out.println("Serwer dziala na porcie " + port);
     }
@@ -51,6 +52,57 @@ public class Serwer {
             t.append("</table><p>Transakcji: " + n + "</p><p><a href='/'>powrót</a></p>");
             wyslij(ex, 200, t.toString());
         } catch (SQLException e) { wyslij(ex, 500, "Błąd bazy: " + esc(e.getMessage())); }
+    }
+
+    // Zadanie dodatkowe: transakcje odrzucone i nieznani klienci.
+    static void odmowy(HttpExchange ex) throws IOException {
+        String sql = "SELECT nr, data, klient, typ, kwota, status "
+                   + "FROM transakcje WHERE status != ? ORDER BY nr";
+
+        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + BAZA);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, "przyjeta");
+
+            StringBuilder t = new StringBuilder(
+                    "<h1>Odmowy i nieznani klienci</h1>"
+                    + "<table><tr><th>nr</th><th>data</th>"
+                    + "<th>klient</th><th>typ</th>"
+                    + "<th>kwota</th><th>status</th></tr>");
+
+            int odmowy = 0, nieznani = 0;
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String status = rs.getString("status");
+
+                    if (status.equals("odmowa")) odmowy++;
+                    if (status.equals("nieznany")) nieznani++;
+
+                    t.append(String.format(PL,
+                            "<tr><td>%d</td><td>%s</td><td>%s</td>"
+                            + "<td>%s</td><td class=n>%,.2f</td>"
+                            + "<td>%s</td></tr>",
+                            rs.getInt("nr"),
+                            esc(rs.getString("data")),
+                            esc(rs.getString("klient")),
+                            esc(rs.getString("typ")),
+                            rs.getDouble("kwota"),
+                            esc(status)));
+                }
+            }
+
+            t.append(String.format(PL,
+                    "</table><p>Odmowy: %d, nieznani klienci: %d, razem: %d</p>",
+                    odmowy, nieznani, odmowy + nieznani));
+
+            t.append("<p><a href='/'>powrót</a></p>");
+
+            wyslij(ex, 200, t.toString());
+
+        } catch (SQLException e) {
+            wyslij(ex, 500, "Błąd bazy: " + esc(e.getMessage()));
+        }
     }
 
     static String parametr(HttpExchange ex, String nazwa) {
